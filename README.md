@@ -17,10 +17,23 @@ When you solve a problem — a CLI quirk, an auth issue, a config gotcha — sav
 ## Install
 
 ```bash
-/plugin marketplace add <your-username>/love-letter
+/plugin marketplace add ZikriBen/love-letter-cc-plugin
 /plugin install love-letter@love-letter
 /reload-plugins
 ```
+
+### Optional: Auto-allow permissions
+
+To skip permission prompts every session, add these to your `~/.claude/settings.json` under `permissions.allow`:
+
+```json
+"Read($HOME/.claude/knowledge-base/**)",
+"Edit($HOME/.claude/knowledge-base/**)",
+"Write($HOME/.claude/knowledge-base/**)",
+"Bash(mkdir -p $HOME/.claude/knowledge-base:*)"
+```
+
+And add `"$HOME/.claude/knowledge-base"` to `permissions.additionalDirectories`.
 
 ## Storage
 
