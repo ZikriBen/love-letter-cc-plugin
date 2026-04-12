@@ -1,14 +1,3 @@
----
-name: ll
-description: |
-  Personal knowledge base for problems and solutions. Love letters to your future self.
-  Use `/ll save` to capture a problem/solution from the current conversation.
-  Use `/ll search <description>` to find past solutions.
-  Use `/ll list` to browse all entries.
-  Trigger when the user says /ll, asks to save something to knowledge base, or asks "have we seen this before?"
-user_invocable: true
----
-
 # Love Letter — Knowledge Base
 
 ## CRITICAL: Exact file paths
@@ -52,9 +41,9 @@ If the conversation has a clear problem/solution flow, extract automatically and
 ```
 I'll save this to the knowledge base:
 
-📝 Problem: [extracted problem]
-💡 Solution: [extracted solution]
-🏷️  Category: [inferred] | Tags: [inferred]
+Problem: [extracted problem]
+Solution: [extracted solution]
+Category: [inferred] | Tags: [inferred]
 
 Look good? (yes / edit)
 ```
@@ -71,7 +60,7 @@ mkdir -p ~/.claude/knowledge-base/entries/[category]
 ### Step 3: Generate filename
 
 Create a slug from the problem title: lowercase, hyphens, no special characters, max 50 chars.
-Example: "uv fails to authenticate with CodeArtifact" → `uv-codeartifact-auth.md`
+Example: "uv fails to authenticate with CodeArtifact" -> `uv-codeartifact-auth.md`
 
 If the file already exists, append a number: `uv-codeartifact-auth-2.md`
 
@@ -115,7 +104,7 @@ Append a new line under the appropriate category header:
 
 ```markdown
 ## [Category]
-- [title](entries/[category]/[filename].md) — [one-line summary] `[tag1]` `[tag2]`
+- [title](entries/[category]/[filename].md) -- [one-line summary] `[tag1]` `[tag2]`
 ```
 
 If the category header doesn't exist yet, create it.
@@ -161,12 +150,12 @@ If matches found:
 ```
 Found [N] match(es):
 
-📝 [Title 1]
+[Title 1]
    Category: [cat] | Tags: [tags] | Saved: [date] | Hits: [N]
    Problem: [one-line summary]
    Solution: [key steps]
 
-📝 [Title 2]
+[Title 2]
    ...
 ```
 
@@ -189,10 +178,10 @@ Read `~/.claude/knowledge-base/KBINDEX.md`.
 Show the full index, organized by category. Add entry count per category.
 
 ```
-📚 Knowledge Base — [total] entries
+Knowledge Base -- [total] entries
 
 ## python (3)
-- uv CodeArtifact auth — refresh token before uv sync `uv` `aws`
+- uv CodeArtifact auth -- refresh token before uv sync `uv` `aws`
 - ...
 
 ## cli (2)
