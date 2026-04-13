@@ -5,11 +5,43 @@
 The index file is: `$HOME/.claude/knowledge-base/KBINDEX.md`
 Entries live in: `$HOME/.claude/knowledge-base/entries/<category>/<slug>.md`
 
-For LIST: Read `$HOME/.claude/knowledge-base/KBINDEX.md` directly. Nothing else needed.
-For SEARCH: Read `$HOME/.claude/knowledge-base/KBINDEX.md` first, then read matching entry files.
-For SAVE: Write to `$HOME/.claude/knowledge-base/entries/<category>/<slug>.md`, then update the index.
+For LIST: Read the index directly.
+For SEARCH: Read the index first, then read matching entry files.
+For SAVE: Write new entry, update the index.
+For STATS: Read all entries, aggregate frontmatter metrics.
 
-Do NOT search for the knowledge base location. Do NOT glob or find. Read the index file directly.
+Do NOT glob or find. Read the index file directly.
+
+## Entry Frontmatter Schema (with metrics)
+
+```yaml
+---
+title: Short title
+category: cli
+tags: [tag1]
+created: YYYY-MM-DD
+last_hit: YYYY-MM-DD
+last_applied: YYYY-MM-DD
+hits: 0                     # times surfaced
+applies: 0                  # times applied
+successes: 0                # confirmed working
+failures: 0                 # didn't work
+original_solve_tokens: 0    # auto-estimated from conversation depth
+original_solve_minutes: 0   # auto-estimated (~2-3 min per turn)
+---
+```
+
+When creating new entries, auto-estimate both from the conversation. Do NOT ask the user.
+
+Tokens (round to nearest 1000):
+- Quick fix (<5 turns): ~3000
+- Medium (5-15 turns): ~15000
+- Deep (15+ turns, many tool calls): ~50000+
+
+Minutes (round to nearest 5, assume ~2-3 min per turn):
+- Quick fix: ~10 min
+- Medium: ~25-40 min
+- Deep: ~60-90 min
 
 ## Commands
 
@@ -17,10 +49,11 @@ Determine the command from ARGUMENTS (passed after `/ll`) or the user's message.
 
 **Routing rules (first match wins):**
 1. ARGUMENTS starts with "save" OR message contains "save", "remember this", "file this" → **SAVE**
-2. ARGUMENTS starts with "list" OR message contains "list", "browse", "show all", "what do we have" → **LIST**
-3. ARGUMENTS starts with "search" OR message contains "search", "find", "have we seen", "recall", "check if" → **SEARCH**
-4. ARGUMENTS contains a description of a problem → **SEARCH** (treat the whole argument as the search query)
-5. If unclear, ask: "Want me to save something or search for something?"
+2. ARGUMENTS starts with "list" OR message contains "list", "browse", "show all" → **LIST**
+3. ARGUMENTS starts with "stats" OR message contains "stats", "metrics", "how many", "success rate", "ROI" → **STATS**
+4. ARGUMENTS starts with "search" OR message contains "search", "find", "have we seen", "recall" → **SEARCH**
+5. ARGUMENTS contains a description of a problem → **SEARCH** (treat whole argument as search query)
+6. If unclear, ask: "Want me to save something or search for something?"
 
 ---
 
@@ -145,25 +178,75 @@ For each match (up to 5), read the full entry file.
 
 ### Step 4: Present results
 
-If matches found:
+**If exactly 1 strong match found** — display and ask to apply:
 
 ```
-Found [N] match(es):
+Found a love letter from [date] that matches this problem:
 
-[Title 1]
-   Category: [cat] | Tags: [tags] | Saved: [date] | Hits: [N]
+[Title]
    Problem: [one-line summary]
-   Solution: [key steps]
+   Solution: [key steps — show the actual commands/code]
 
-[Title 2]
-   ...
+Want me to apply this fix? (yes / yes silently / no / show full entry)
 ```
 
-Then ask: "Want me to apply any of these?"
+Response handling:
+- "yes" -- apply the fix, narrate each step
+- "yes silently" or "silent" -- apply the fix quietly, just report the outcome
+- "no" -- skip, proceed with normal debugging
+- "show full entry" or "details" -- display the complete entry, then ask again
 
-Update the `last_hit` date and increment `hits` counter in matched entry files.
+**If multiple matches found** -- list them briefly and ask which to apply:
 
-If no matches: "Nothing in the knowledge base matches this. If you solve it, save it with `/ll save`."
+```
+Found [N] love letters that might match:
+
+1. [Title 1] -- [one-line] (from [date])
+2. [Title 2] -- [one-line] (from [date])
+
+Which one should I apply? (number / "show N" / "none")
+```
+
+**If no matches** -- "Nothing in the knowledge base matches this. If you solve it, save it with `/ll save`."
+
+### Step 5: Update metrics and track outcome
+
+On surfacing the match: increment `hits`, set `last_hit` to today.
+On apply (yes/silent): increment `applies`, set `last_applied` to today.
+
+Then ask: "Did the fix work? (yes / no / partial)"
+- yes → `successes +1`. Say "Love letter paid off. Saved ~[original_solve_minutes] min and ~[original_solve_tokens] tokens."
+- no → `failures +1`. Ask if they want to update the entry after solving.
+- partial → `successes +1`, `failures +1`. Offer to update the entry.
+
+---
+
+## STATS Flow
+
+Read all entries via the index, aggregate frontmatter metrics:
+- Total entries, hits, applies, successes, failures
+- Success rate = successes / (successes + failures)
+- Time saved = sum(successes * original_solve_minutes)
+- Tokens saved = sum(successes * original_solve_tokens)
+- Top 5 most-applied
+
+Display:
+
+```
+Love Letter Stats
+
+[N] entries across [M] categories
+[X] surfaced, [Y] applied, [Z] confirmed working
+Success rate: [NN]%
+Time saved: ~[NN] min ([NN] hours)
+Tokens saved: ~[NN]K
+
+Top love letters by usage:
+1. [Title] -- [applies] applies, [successes]/[applies+failures] success
+2. ...
+```
+
+If 0 applies: "No love letters applied yet. Use /ll search when you hit a problem."
 
 ---
 
