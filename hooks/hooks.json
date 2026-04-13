@@ -6,7 +6,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"LOVE-LETTER KB AVAILABLE: Before debugging any error or non-trivial problem, silently invoke the love-letter:ll skill with SEARCH to check if this has been solved before. If a match is found, surface it. After solving a tricky problem, suggest /ll save. KB index: $HOME/.claude/knowledge-base/KBINDEX.md\"}}'",
+            "command": "mkdir -p \"$HOME/.claude/knowledge-base/.session-logs\" 2>/dev/null; find \"$HOME/.claude/knowledge-base/.session-logs\" -type f -mtime +7 -delete 2>/dev/null; echo '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"LOVE-LETTER KB AVAILABLE: Before debugging any error or non-trivial problem, silently invoke the love-letter:ll skill with SEARCH to check if this has been solved before. If a match is found, surface it. After solving a tricky problem, suggest /ll save. At save time, read the session log at $HOME/.claude/knowledge-base/.session-logs/<session_id>.jsonl to compute actual elapsed minutes. KB index: $HOME/.claude/knowledge-base/KBINDEX.md\"}}'",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SID=$(jq -r '.session_id // \"unknown\"'); LOG=\"$HOME/.claude/knowledge-base/.session-logs/${SID}.jsonl\"; mkdir -p \"$(dirname \"$LOG\")\" 2>/dev/null; echo \"{\\\"ts\\\": $(date +%s), \\\"session_id\\\": \\\"${SID}\\\"}\" >> \"$LOG\" 2>/dev/null; true",
             "timeout": 2
           }
         ]

@@ -31,17 +31,14 @@ original_solve_minutes: 0   # auto-estimated (~2-3 min per turn)
 ---
 ```
 
-When creating new entries, auto-estimate both from the conversation. Do NOT ask the user.
+When creating new entries, auto-calculate both. Do NOT ask the user.
 
-Tokens (round to nearest 1000):
+**Minutes** — use Glob (not Bash) with pattern `$HOME/.claude/knowledge-base/.session-logs/*.jsonl` to find the most recent session log, then Read it. Each line is `{"ts": <epoch>, "session_id": "..."}`. Find the first turn where the problem appeared, compute `(latest_ts - problem_ts) / 60`, round to nearest 5. Fallback if missing: ~2-3 min per turn.
+
+**Tokens** (from conversation depth):
 - Quick fix (<5 turns): ~3000
 - Medium (5-15 turns): ~15000
 - Deep (15+ turns, many tool calls): ~50000+
-
-Minutes (round to nearest 5, assume ~2-3 min per turn):
-- Quick fix: ~10 min
-- Medium: ~25-40 min
-- Deep: ~60-90 min
 
 ## Commands
 

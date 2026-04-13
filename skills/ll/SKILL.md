@@ -57,21 +57,34 @@ original_solve_minutes: 0   # user-reported minutes spent solving originally
 ---
 ```
 
-When creating a new entry (SAVE), auto-estimate both metrics from the current conversation — don't ask the user.
+When creating a new entry (SAVE), auto-calculate both metrics — don't ask the user.
 
-**Estimate `original_solve_tokens`** from conversation depth between problem first appearing and solution:
+### Calculating `original_solve_minutes` from the session log
+
+The plugin's `UserPromptSubmit` hook writes each user turn's timestamp to:
+`$HOME/.claude/knowledge-base/.session-logs/<session_id>.jsonl`
+
+Each line is JSON like: `{"ts": 1712999999, "session_id": "abc123"}`
+
+**Use Read and Glob tools — NOT Bash — to avoid permission prompts:**
+
+1. Use **Glob** with pattern `$HOME/.claude/knowledge-base/.session-logs/*.jsonl` to find session log files (returns them sorted by mtime, newest first)
+2. Use **Read** to read the most recent log file (first result from Glob)
+3. Parse each line as JSON, collect timestamps
+4. Identify the first turn where the problem was discussed (look at the conversation — which turn index introduced the error/problem)
+5. `original_solve_minutes = (latest_ts - problem_ts) / 60`, rounded to nearest 5
+
+**Fallback if session log is missing:** estimate from conversation depth — ~2-3 minutes per turn between problem and now. Round to nearest 5.
+
+### Estimating `original_solve_tokens`
+
+The hook can't measure Claude's output tokens. Estimate from conversation depth in the solve span:
 - Quick fix (< 5 turns): ~3000
 - Medium (5-15 turns): ~15000
 - Deep (15+ turns, many tool calls): ~50000+
-- Add ~1000 per tool call (Read/Bash/Edit) in the solve span
+- Add ~1000 per tool call (Read/Bash/Edit) observed in the solve span
 
-**Estimate `original_solve_minutes`** from the same conversation span. Assume ~2-3 minutes per turn (includes user thinking/typing + Claude response time):
-- Quick fix (< 5 turns): ~10 min
-- Medium (5-15 turns): ~25-40 min
-- Deep (15+ turns with tool calls): ~60-90 min
-- Heavy debugging with multiple file reads and back-and-forth: 90+ min
-
-Both numbers represent "what it cost to discover this fix." Every successful apply saves ~that much. Round minutes to the nearest 5.
+Both numbers represent "what it cost to discover this fix." Every successful apply saves ~that much.
 
 ## Commands
 
