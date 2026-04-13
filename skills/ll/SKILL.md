@@ -3,21 +3,22 @@ name: ll
 description: |
   Personal knowledge base of problems and solutions. Love letters to your future self.
 
-  **PROACTIVE USE — trigger this skill automatically when:**
-  - User encounters an error, exception, or failing command
-  - User asks "why is this broken?" / "how do I fix..." / "what's wrong with..."
-  - You're about to start debugging or troubleshooting anything
-  - A command fails with a non-trivial error (auth, config, build, install, network)
-  - User mentions something "not working" or "keeps failing"
+  **AUTO-SEARCH TRIGGERS (strict filter — all must pass):**
+  Trigger this skill's SEARCH flow automatically ONLY when all three conditions are met:
+  1. A PROBLEM signal is present: actual error text, exception, stack trace, failed command output (exit code != 0), OR user says "broken", "failing", "error", "won't work", "keeps X"
+  2. It's a TROUBLESHOOTING context, not: writing new code, refactoring, designing, asking "how do I", or routine questions
+  3. The problem has non-trivial specificity (has a tool name, error code, or identifiable pattern — not generic "it's slow")
 
-  In these cases, silently run SEARCH first with the error signature or problem description.
-  If a match is found, surface it: "Found a past love letter that might match this — [title]."
-  If no match, proceed with normal debugging, and suggest saving after it's solved.
+  Do NOT auto-trigger for: coding tasks, design discussions, routine questions, simple syntax help, or anything without a concrete error/failure.
+
+  When auto-triggering: run SEARCH silently. If NO match, continue normally — do not announce you searched. If match found, surface it.
 
   **Explicit invocations:**
-  - `/ll save` — capture current problem/solution
+  - `/ll save` — capture current problem/solution (never auto-save; always user-initiated)
   - `/ll search <description>` — find past solutions
   - `/ll list` — browse all entries
+  - `/ll stats` — show metrics
+  - `/ll stale` — review entries marked stale
 
   Also trigger when user says: "check love letter", "have we seen this", "recall", "did we solve this before".
 user_invocable: true
@@ -29,13 +30,60 @@ user_invocable: true
 
 The index file is: `$HOME/.claude/knowledge-base/KBINDEX.md`
 Entries live in: `$HOME/.claude/knowledge-base/entries/<category>/<slug>.md`
+Stale entries live in: `$HOME/.claude/knowledge-base/entries/.stale/<category>/<slug>.md`
+Global cost metrics: `$HOME/.claude/knowledge-base/.metrics.json`
 
 For LIST: Read `$HOME/.claude/knowledge-base/KBINDEX.md` directly. Nothing else needed.
-For SEARCH: Read `$HOME/.claude/knowledge-base/KBINDEX.md` first, then read matching entry files.
+For SEARCH: Read `$HOME/.claude/knowledge-base/KBINDEX.md` first, then read matching entry files. Never search `.stale/`.
 For SAVE: Write to `$HOME/.claude/knowledge-base/entries/<category>/<slug>.md`, then update the index.
-For STATS: Read all entries and aggregate frontmatter metrics.
+For STATS: Read all entries + `.metrics.json`, compute NET savings.
+For STALE: List files under `.stale/` subdirectories.
 
 Do NOT search for the knowledge base location. Do NOT glob or find. Read the index file directly.
+
+## Global cost tracking (.metrics.json)
+
+Structure:
+```json
+{
+  "total_search_runs": 0,
+  "total_apply_runs": 0,
+  "total_outcome_checks": 0,
+  "total_cost_tokens": 0
+}
+```
+
+**After every SEARCH run** (auto or explicit): increment `total_search_runs` and add ~2500 tokens to `total_cost_tokens`.
+**After every APPLY**: increment `total_apply_runs` and add an estimate of tokens actually spent narrating + executing the fix (rough: ~1500 for silent, ~4000 for narrated).
+**After every outcome check**: increment `total_outcome_checks` and add ~500 tokens.
+
+If `.metrics.json` does not exist, create it with zeros.
+
+Net savings in STATS = gross savings (successes * original_solve_tokens) - total_cost_tokens.
+
+## Auto-search filter (use judgment, not keywords)
+
+Before running SEARCH automatically, ask yourself: **"Is the user trying to fix something that's wrong?"**
+
+Trigger auto-search when yes. The user's phrasing doesn't matter — they might say "broken", "weird", "off", "not right", describe symptoms, paste an error, or just describe surprising behavior. The signal is the intent, not the vocabulary.
+
+**Good triggers (examples, not exhaustive):**
+- Pasted error/stack trace/exit code
+- "This is returning X when I expected Y"
+- "I ran X and got weird output"
+- "My build takes forever now" (symptom)
+- Tool failure visible in previous tool results
+
+**Bad triggers (proceed normally, no search):**
+- Writing new code from scratch
+- Design questions ("should I use A or B")
+- Refactoring requests
+- Conceptual questions ("how does X work")
+- Trivial fixes obvious from context (typos, missing imports the user clearly sees)
+
+**Cost-benefit check:** auto-search costs ~2000-5000 tokens (read index + a few entries). Skip if the problem is clearly trivial or the KB is unlikely to have it.
+
+When triggering: search silently. Surface ONLY if a genuinely relevant match is found. If no match, continue with normal debugging — never announce "I searched and found nothing."
 
 ## Entry Frontmatter Schema (with metrics)
 
@@ -94,9 +142,10 @@ Determine the command from ARGUMENTS (passed after `/ll`) or the user's message.
 1. ARGUMENTS starts with "save" OR message contains "save", "remember this", "file this" → **SAVE**
 2. ARGUMENTS starts with "list" OR message contains "list", "browse", "show all", "what do we have" → **LIST**
 3. ARGUMENTS starts with "stats" OR message contains "stats", "metrics", "how many", "success rate", "ROI" → **STATS**
-4. ARGUMENTS starts with "search" OR message contains "search", "find", "have we seen", "recall", "check if" → **SEARCH**
-5. ARGUMENTS contains a description of a problem → **SEARCH** (treat the whole argument as the search query)
-6. If unclear, ask: "Want me to save something or search for something?"
+4. ARGUMENTS starts with "stale" OR message contains "stale", "review stale", "show stale" → **STALE**
+5. ARGUMENTS starts with "search" OR message contains "search", "find", "have we seen", "recall", "check if" → **SEARCH**
+6. ARGUMENTS contains a description of a problem → **SEARCH** (treat the whole argument as the search query)
+7. If unclear, ask: "Want me to save something or search for something?"
 
 ---
 
@@ -261,12 +310,26 @@ When the entry is surfaced (before user responds):
 When user says "yes" or "silent" (applied):
 - Increment `applies` by 1, update `last_applied` to today's date.
 
-**Then wait for the user to report back** (or ask them after a reasonable delay):
-"Did the fix work? (yes / no / partial)"
+**After applying, ALWAYS ask:** "Did the fix work? (yes / no / partial)"
 
 - **yes** → increment `successes` by 1. Celebrate briefly: "Love letter paid off. Saved ~[original_solve_minutes] min and ~[original_solve_tokens] tokens of re-debugging."
-- **no** → increment `failures` by 1. Ask if they want to update the entry with the new solution after they solve it.
-- **partial** → increment both `successes` and `failures`. Ask what needed to change; offer to update the entry.
+- **no** → increment `failures` by 1. Evaluate staleness (see Staleness Rules below). Then ask: "Want to update this entry once we find the real fix?"
+- **partial** → increment both `successes` and `failures`. Ask what needed to change; offer to update the entry (but do NOT mark stale).
+
+### Staleness Rules
+
+After any "no" response, check the entry's metrics:
+- If `failures >= successes AND failures >= 2` → **mark stale**
+- If `failures == 1 AND successes == 0` → keep active but flag for attention: "This is the first failure for this entry. Watching it."
+- Otherwise → keep active.
+
+**To mark stale:**
+1. Move the file from `entries/<category>/<slug>.md` to `entries/.stale/<category>/<slug>.md` (use Bash `mv` or Write + delete original)
+2. Add `stale: true` and `staled_on: <today>` to the frontmatter
+3. Remove the entry line from `KBINDEX.md`
+4. Tell the user: "Marked stale (failed [N] times). You can review with `/ll stale` or restore it manually."
+
+Stale entries are NOT searched automatically but can be viewed with `/ll stale`.
 
 ---
 
@@ -278,15 +341,18 @@ Read `$HOME/.claude/knowledge-base/KBINDEX.md` to enumerate entries, then read e
 
 ### Step 2: Aggregate
 
-Compute:
+Read both the entries AND `.metrics.json`. Compute:
 - **Total entries** — count of all entries
 - **Total hits** — sum of `hits` across entries
 - **Total applies** — sum of `applies`
 - **Total successes** — sum of `successes`
 - **Total failures** — sum of `failures`
-- **Success rate** — `successes / (successes + failures)` as percentage (skip if denominator is 0)
-- **Time saved** — sum of `(successes * original_solve_minutes)` across entries (user-reported data, not invented)
-- **Tokens saved** — sum of `(successes * original_solve_tokens)` across entries
+- **Success rate** — `successes / (successes + failures)` as percentage
+- **Gross tokens saved** — sum of `(successes * original_solve_tokens)`
+- **Gross minutes saved** — sum of `(successes * original_solve_minutes)`
+- **Total cost tokens** — from `.metrics.json.total_cost_tokens`
+- **Net tokens saved** — gross - cost
+- **ROI** — gross / cost (e.g., 4.5x means every token spent saved 4.5 tokens of re-debugging)
 - **Top 5 most-applied** — entries sorted by `applies` descending
 
 ### Step 3: Display
@@ -297,15 +363,49 @@ Compute:
 📚 [N] entries across [M] categories
 🎯 [X] surfaced, [Y] applied, [Z] confirmed working
 📊 Success rate: [NN]%
-⏱️  Time saved: ~[NN] min ([NN] hours) — based on your reported solve times
-💰 Tokens saved: ~[NN]K (estimated)
+
+💰 Gross saved: ~[NN]K tokens / ~[NN] min
+💸 Cost: ~[NN]K tokens ([N] searches + [N] applies)
+✨ Net saved: ~[NN]K tokens
+📈 ROI: [X.X]x
 
 Top love letters by usage:
 1. [Title] — [applies] applies, [successes]/[applies+failures] success
 2. ...
 ```
 
+If ROI < 1x, display a warning: "⚠️ Currently costing more than saving — consider pruning stale entries or widening auto-search triggers."
+
 If the KB has 0 applies yet: "No love letters have been applied yet. Use `/ll search` when you hit a problem to start building your ROI."
+
+---
+
+## STALE Flow
+
+List entries that have been marked stale (failed > succeeded).
+
+### Step 1: Glob stale entries
+
+Use Glob with pattern `$HOME/.claude/knowledge-base/entries/.stale/**/*.md` to find all stale files.
+
+### Step 2: Read each and display
+
+For each stale entry, read frontmatter and display:
+
+```
+⚠️  Stale Love Letters — [N] entries
+
+📝 [Title]
+   Category: [cat] | Failures: [N] | Successes: [N] | Staled: [date]
+   Original problem: [one-line]
+   Path: entries/.stale/<cat>/<slug>.md
+
+Actions:
+  /ll restore [slug]  — move back to active
+  /ll delete [slug]   — remove permanently
+```
+
+If no stale entries: "No stale love letters. Everything's still working."
 
 ---
 

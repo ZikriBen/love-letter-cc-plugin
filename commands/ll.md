@@ -2,15 +2,37 @@
 
 ## CRITICAL: Exact file paths
 
-The index file is: `$HOME/.claude/knowledge-base/KBINDEX.md`
-Entries live in: `$HOME/.claude/knowledge-base/entries/<category>/<slug>.md`
+Active entries: `$HOME/.claude/knowledge-base/entries/<category>/<slug>.md`
+Stale entries: `$HOME/.claude/knowledge-base/entries/.stale/<category>/<slug>.md`
+Index: `$HOME/.claude/knowledge-base/KBINDEX.md`
+Cost metrics: `$HOME/.claude/knowledge-base/.metrics.json`
 
-For LIST: Read the index directly.
-For SEARCH: Read the index first, then read matching entry files.
-For SAVE: Write new entry, update the index.
-For STATS: Read all entries, aggregate frontmatter metrics.
+For LIST: Read the index.
+For SEARCH: Read the index + matching entries. Then increment `.metrics.json.total_search_runs` and add ~2500 to `total_cost_tokens`.
+For SAVE: Write new entry, update index.
+For STATS: Read active entries + `.metrics.json`, show gross vs net vs ROI.
+For STALE: Glob `.stale/` subdirectories.
 
-Do NOT glob or find. Read the index file directly.
+After every APPLY: increment `.metrics.json.total_apply_runs` and add ~1500 (silent) or ~4000 (narrated) to `total_cost_tokens`.
+After every outcome check: increment `total_outcome_checks` and add ~500.
+
+## Auto-search filter (intent-based judgment)
+
+Ask yourself: "Is the user trying to fix something that's wrong?"
+
+Trigger auto-search when yes — regardless of phrasing. Signals:
+- Error text / stack trace / non-zero exit code
+- "X is returning Y when I expected Z"
+- "Ran X and got weird output"
+- Tool failure visible in recent output
+- Symptom described (slow, hanging, unexpected behavior)
+
+Do NOT auto-search for:
+- Writing new code, refactoring, or design questions
+- Conceptual questions ("how does X work")
+- Trivial fixes (typos the user clearly sees)
+
+Search silently. Surface ONLY on match. Never announce "I searched and found nothing."
 
 ## Entry Frontmatter Schema (with metrics)
 
@@ -220,12 +242,14 @@ Then ask: "Did the fix work? (yes / no / partial)"
 
 ## STATS Flow
 
-Read all entries via the index, aggregate frontmatter metrics:
+Read entries + `.metrics.json`. Aggregate:
 - Total entries, hits, applies, successes, failures
 - Success rate = successes / (successes + failures)
-- Time saved = sum(successes * original_solve_minutes)
-- Tokens saved = sum(successes * original_solve_tokens)
-- Top 5 most-applied
+- Gross tokens saved = sum(successes * original_solve_tokens)
+- Gross minutes saved = sum(successes * original_solve_minutes)
+- Total cost tokens (from .metrics.json)
+- Net = gross - cost
+- ROI = gross / cost
 
 Display:
 
@@ -235,13 +259,18 @@ Love Letter Stats
 [N] entries across [M] categories
 [X] surfaced, [Y] applied, [Z] confirmed working
 Success rate: [NN]%
-Time saved: ~[NN] min ([NN] hours)
-Tokens saved: ~[NN]K
+
+Gross saved: ~[NN]K tokens / ~[NN] min
+Cost: ~[NN]K tokens ([N] searches + [N] applies)
+Net saved: ~[NN]K tokens
+ROI: [X.X]x
 
 Top love letters by usage:
 1. [Title] -- [applies] applies, [successes]/[applies+failures] success
 2. ...
 ```
+
+Warn if ROI < 1x: "Currently costing more than saving — prune stale entries."
 
 If 0 applies: "No love letters applied yet. Use /ll search when you hit a problem."
 
