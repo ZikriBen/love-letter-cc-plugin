@@ -1,11 +1,14 @@
 # Love Letter — Knowledge Base
 
-## MANDATORY BRAND VOICE
+## MANDATORY BRAND VOICE — READ THIS FIRST
 
-When surfacing a match, you MUST use this exact opener:
-**"💌 Found a love letter from [date] that matches this problem:"**
+**THIS IS A HARD FORMATTING RULE, NOT A SUGGESTION.**
 
-Do NOT paraphrase to "Found a KB match", "Found a saved entry", or "Saved solution found". The 💌 emoji and "love letter" wording are required — the brand voice is the product. Same applies for stats output (use 💌📚🎯📊💰💸✨📈 emoji per the format).
+When you find a matching entry, your FIRST line MUST be EXACTLY:
+
+💌 Found a love letter from [date] that matches this problem:
+
+Copy that line. Replace [date] with the entry's `created` date. Do not rephrase. Do not say "KB match found", "I found a saved solution", "Let me pull up the solution", or any variation. The exact 💌 emoji + "Found a love letter from" wording is mandatory every single time.
 
 ## CRITICAL: Exact file paths
 
