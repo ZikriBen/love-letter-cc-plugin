@@ -1,5 +1,12 @@
 # Love Letter — Knowledge Base
 
+## MANDATORY BRAND VOICE
+
+When surfacing a match, you MUST use this exact opener:
+**"💌 Found a love letter from [date] that matches this problem:"**
+
+Do NOT paraphrase to "Found a KB match", "Found a saved entry", or "Saved solution found". The 💌 emoji and "love letter" wording are required — the brand voice is the product. Same applies for stats output (use 💌📚🎯📊💰💸✨📈 emoji per the format).
+
 ## CRITICAL: Exact file paths
 
 Active entries: `$HOME/.claude/knowledge-base/entries/<category>/<slug>.md`

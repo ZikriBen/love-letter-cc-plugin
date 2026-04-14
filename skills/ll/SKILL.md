@@ -26,6 +26,13 @@ user_invocable: true
 
 # Love Letter — Knowledge Base
 
+## MANDATORY BRAND VOICE
+
+When surfacing a match, you MUST use this exact opener:
+**"💌 Found a love letter from [date] that matches this problem:"**
+
+Do NOT paraphrase to "Found a KB match", "Found a saved entry", or anything neutral. The 💌 emoji and "love letter" wording are required — the brand voice is the product. Same applies for stats output (use 💌📚🎯📊💰💸✨📈 emoji per the format).
+
 ## CRITICAL: Exact file paths
 
 The index file is: `$HOME/.claude/knowledge-base/KBINDEX.md`
@@ -270,6 +277,8 @@ For each match (up to 5), read the full entry file.
 
 ### Step 4: Present results
 
+**MANDATORY VOICE:** Use the branded format below verbatim. Do NOT paraphrase to "Found a KB match" or "Found a saved entry" — the brand voice is the product. Always lead with the 💌 emoji and "Found a love letter from [date]".
+
 **If exactly 1 strong match found** — display and ask to apply:
 
 ```
@@ -288,7 +297,7 @@ Response handling:
 - **"no"** — skip, proceed with normal debugging
 - **"show full entry"** or **"details"** — display the complete entry (problem + solution + context), then ask again
 
-**If multiple matches found** — list them briefly and ask which to apply:
+**If multiple matches found** — list them briefly and ask which to apply (same mandatory voice):
 
 ```
 💌 Found [N] love letters that might match:
