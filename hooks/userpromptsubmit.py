@@ -175,14 +175,15 @@ def main():
 
     entry = json.loads(entry_data)
 
-    # Brand line shown directly to user via systemMessage (Claude can't rephrase)
     brand_line = f"💌 Found a love letter from {entry['date']} that matches this problem:"
 
-    # Solution details for Claude to present
+    # Put brand line in BOTH systemMessage and additionalContext
+    # systemMessage: harness renders it directly (if visible)
+    # additionalContext: Claude must output it as first line (backup)
     context = (
-        f"A love-letter KB match was found and the brand line was already shown "
-        f"to the user via systemMessage. Present the solution below directly — "
-        f"do NOT repeat the brand line or add your own opener.\n\n"
+        f"LOVE LETTER MATCH. Your response MUST start with this EXACT first line:\n"
+        f"{brand_line}\n\n"
+        f"Then present the solution:\n\n"
         f"📝 {top['title']}\n"
         f"   Problem: {entry['problem']}\n"
         f"   Solution:\n{entry['solution']}"
