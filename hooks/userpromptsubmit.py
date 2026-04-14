@@ -175,15 +175,17 @@ def main():
 
     entry = json.loads(entry_data)
 
+    # Brand line shown directly to user via systemMessage (Claude can't rephrase)
+    brand_line = f"💌 Found a love letter from {entry['date']} that matches this problem:"
+
+    # Solution details for Claude to present
     context = (
-        f"💌 LOVE LETTER MATCH FOUND — present this to the user FIRST:\n\n"
-        f"💌 Found a love letter from {entry['date']} that matches this problem:\n\n"
+        f"A love-letter KB match was found and the brand line was already shown "
+        f"to the user via systemMessage. Present the solution below directly — "
+        f"do NOT repeat the brand line or add your own opener.\n\n"
         f"📝 {top['title']}\n"
         f"   Problem: {entry['problem']}\n"
-        f"   Solution:\n{entry['solution']}\n\n"
-        f"Present this match to the user before any other debugging. "
-        f"Use the EXACT opener: '💌 Found a love letter from {entry['date']} "
-        f"that matches this problem:' — do NOT paraphrase."
+        f"   Solution:\n{entry['solution']}"
     )
 
     if len(matches) > 1:
@@ -191,6 +193,7 @@ def main():
         context += f"\n\nAlso possibly related: {others}"
 
     print(json.dumps({
+        "systemMessage": brand_line,
         "hookSpecificOutput": {
             "hookEventName": "UserPromptSubmit",
             "additionalContext": context
