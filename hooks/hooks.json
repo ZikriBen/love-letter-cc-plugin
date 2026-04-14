@@ -17,8 +17,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "{ INPUT=$(cat); SID=$(echo \"$INPUT\" | jq -r '.session_id // \"unknown\"' 2>/dev/null || echo unknown); LOG=\"$HOME/.claude/knowledge-base/.session-logs/${SID}.jsonl\"; mkdir -p \"$(dirname \"$LOG\")\" 2>/dev/null; printf '{\"ts\": %s, \"session_id\": \"%s\"}\\n' \"$(date +%s)\" \"$SID\" >> \"$LOG\" 2>/dev/null; } >/dev/null 2>&1; printf '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"REMINDER: If the user is trying to fix a problem (any error, failure, broken behavior, or troubleshooting intent), invoke love-letter:ll with SEARCH FIRST before answering from your own knowledge. Skip only if this is clearly not a problem-fixing request (writing new code, design, refactor, conceptual question).\"}}'; exit 0",
-            "timeout": 2
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/userpromptsubmit.py",
+            "timeout": 5
           }
         ]
       }
