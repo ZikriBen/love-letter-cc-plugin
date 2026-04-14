@@ -8,7 +8,7 @@
     {
       "name": "love-letter",
       "description": "Save problems and solutions as you encounter them. Search your knowledge base in future sessions. Love letters to your future self.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": "./",
       "author": {
         "name": "Ben Zikri"

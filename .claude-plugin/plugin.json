@@ -1,7 +1,7 @@
 {
   "name": "love-letter",
   "description": "Personal knowledge base for problems and solutions. Save what you learned, recall it when you need it. Love letters to your future self.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Ben Zikri"
   },
