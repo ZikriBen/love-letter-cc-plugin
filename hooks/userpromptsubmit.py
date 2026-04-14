@@ -177,21 +177,31 @@ def main():
 
     brand_line = f"💌 Found a love letter from {entry['date']} that matches this problem:"
 
-    # Build the full branded response
-    full_response = f"{brand_line}\n\n"
-    full_response += f"📝 **{top['title']}**\n\n"
-    full_response += f"{entry['solution']}"
-
+    solution_text = entry['solution']
     if len(matches) > 1:
         others = ", ".join(m["title"] for m in matches[1:])
-        full_response += f"\n\n---\nAlso possibly related: {others}"
+        solution_text += f"\n\nAlso possibly related: {others}"
 
-    full_response += "\n\n*Say 'apply' to run the fix, or just keep chatting to skip.*"
+    # Inject the match — Claude presents it. DO NOT also invoke the skill.
+    context = (
+        f"LOVE LETTER HOOK ALREADY SEARCHED THE KB — DO NOT invoke the "
+        f"love-letter:ll skill or Skill tool. The search is done.\n\n"
+        f"Your COMPLETE response must be:\n"
+        f"---BEGIN RESPONSE---\n"
+        f"{brand_line}\n\n"
+        f"📝 **{top['title']}**\n\n"
+        f"{solution_text}\n\n"
+        f"*Say 'apply' to run the fix, or keep chatting to skip.*\n"
+        f"---END RESPONSE---\n\n"
+        f"Output ONLY the text between BEGIN/END markers. Nothing else."
+    )
 
-    # Block Claude from responding — the hook IS the response
     print(json.dumps({
-        "decision": "block",
-        "reason": full_response
+        "systemMessage": brand_line,
+        "hookSpecificOutput": {
+            "hookEventName": "UserPromptSubmit",
+            "additionalContext": context
+        }
     }))
     sys.exit(0)
 
