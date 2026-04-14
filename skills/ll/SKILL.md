@@ -1,7 +1,7 @@
 ---
 name: ll
 description: |
-  Personal knowledge base of problems and solutions. Love letters to your future self.
+  Love letters to your future self. A collection of solved problems you can recall instantly.
 
   **AUTO-SEARCH TRIGGERS (strict filter — all must pass):**
   Trigger this skill's SEARCH flow automatically ONLY when all three conditions are met:
@@ -24,7 +24,7 @@ description: |
 user_invocable: true
 ---
 
-# Love Letter — Knowledge Base
+# Love Letter
 
 ## MANDATORY BRAND VOICE — READ THIS FIRST
 
@@ -34,7 +34,7 @@ When you find a matching entry, your FIRST line MUST be EXACTLY:
 
 💌 Found a love letter from [date] that matches this problem:
 
-Copy that line. Replace [date] with the entry's `created` date. Do not rephrase. Do not say "KB match found", "I found a saved solution", "Let me pull up the solution", or any variation. The exact 💌 emoji + "Found a love letter from" wording is mandatory every single time.
+Copy that line. Replace [date] with the entry's `created` date. Do not rephrase. Do not say "KB match", "saved solution", "knowledge base", or "let me pull up". Always say "love letter". The exact 💌 emoji + "Found a love letter from" wording is mandatory every single time.
 
 If you catch yourself writing anything else as the opener, delete it and use the exact format above.
 
@@ -176,7 +176,7 @@ Extract from the conversation context OR ask the user:
 If the conversation has a clear problem/solution flow, extract automatically and confirm with the user:
 
 ```
-I'll save this to the knowledge base:
+I'll write this love letter:
 
 📝 Problem: [extracted problem]
 💡 Solution: [extracted solution]
@@ -260,7 +260,7 @@ Display: "Saved. Your future self will thank you."
 
 Read `~/.claude/knowledge-base/KBINDEX.md`.
 
-If it doesn't exist or is empty: "Knowledge base is empty. Save something first with `/ll save`."
+If it doesn't exist or is empty: "No love letters yet. Save your first one with `/ll save` after solving a problem."
 
 ### Step 2: Find matches
 
@@ -282,7 +282,7 @@ For each match (up to 5), read the full entry file.
 
 ### Step 4: Present results
 
-**MANDATORY VOICE:** Use the branded format below verbatim. Do NOT paraphrase to "Found a KB match" or "Found a saved entry" — the brand voice is the product. Always lead with the 💌 emoji and "Found a love letter from [date]".
+**MANDATORY VOICE:** Use the branded format below verbatim. Never say "KB", "knowledge base", or "saved entry". Always say "love letter". Always lead with the 💌 emoji and "Found a love letter from [date]".
 
 **If exactly 1 strong match found** — display and ask to apply:
 
@@ -314,7 +314,7 @@ Response handling:
 Which one should I apply? (number / "show N" / "none")
 ```
 
-**If no matches** — "Nothing in the knowledge base matches this. If you solve it, save it with `/ll save`."
+**If no matches** — "No love letters match this one. If you solve it, save it with `/ll save`."
 
 ### Step 5: Update metrics and track outcome
 
@@ -390,7 +390,7 @@ Top love letters by usage:
 
 If ROI < 1x, display a warning: "⚠️ Currently costing more than saving — consider pruning stale entries or widening auto-search triggers."
 
-If the KB has 0 applies yet: "No love letters have been applied yet. Use `/ll search` when you hit a problem to start building your ROI."
+If the KB has 0 applies yet: "No love letters applied yet. Hit a problem and let the search find your past self's wisdom."
 
 ---
 
@@ -434,7 +434,7 @@ Read `~/.claude/knowledge-base/KBINDEX.md`.
 Show the full index, organized by category. Add entry count per category.
 
 ```
-📚 Knowledge Base — [total] entries
+💌 Love Letters — [total] entries
 
 ## python (3)
 - uv CodeArtifact auth — refresh token before uv sync `uv` `aws`

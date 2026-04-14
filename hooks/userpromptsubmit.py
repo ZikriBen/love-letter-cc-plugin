@@ -153,13 +153,13 @@ def main():
     matches = search_index(user_prompt)
 
     if not matches:
-        # No match — just remind Claude about KB (lightweight)
+        # No match — lightweight reminder
         print(json.dumps({
             "hookSpecificOutput": {
                 "hookEventName": "UserPromptSubmit",
                 "additionalContext": (
-                    "love-letter KB active. If user is fixing a problem "
-                    "and you solve it, suggest /ll save."
+                    "love-letter active. If you help solve a non-trivial problem, "
+                    "suggest: 'Want me to save this as a love letter?'"
                 )
             }
         }))
