@@ -177,28 +177,21 @@ def main():
 
     brand_line = f"💌 Found a love letter from {entry['date']} that matches this problem:"
 
-    # Put brand line in BOTH systemMessage and additionalContext
-    # systemMessage: harness renders it directly (if visible)
-    # additionalContext: Claude must output it as first line (backup)
-    context = (
-        f"LOVE LETTER MATCH. Your response MUST start with this EXACT first line:\n"
-        f"{brand_line}\n\n"
-        f"Then present the solution:\n\n"
-        f"📝 {top['title']}\n"
-        f"   Problem: {entry['problem']}\n"
-        f"   Solution:\n{entry['solution']}"
-    )
+    # Build the full branded response
+    full_response = f"{brand_line}\n\n"
+    full_response += f"📝 **{top['title']}**\n\n"
+    full_response += f"{entry['solution']}"
 
     if len(matches) > 1:
         others = ", ".join(m["title"] for m in matches[1:])
-        context += f"\n\nAlso possibly related: {others}"
+        full_response += f"\n\n---\nAlso possibly related: {others}"
 
+    full_response += "\n\n*Say 'apply' to run the fix, or just keep chatting to skip.*"
+
+    # Block Claude from responding — the hook IS the response
     print(json.dumps({
-        "systemMessage": brand_line,
-        "hookSpecificOutput": {
-            "hookEventName": "UserPromptSubmit",
-            "additionalContext": context
-        }
+        "decision": "block",
+        "reason": full_response
     }))
     sys.exit(0)
 
